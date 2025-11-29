@@ -6,7 +6,7 @@ This repository contains a **Bad Apple** demo for the PicoMite HDMI/USB, featuri
   Uses a fast **CSUB decoder in C**
 
 - **LQ version (160×120, ~6 FPS)**  
-  Pure **MMBasic**, easy to read and learn from
+  Pure **MMBasic**, easy to read.
 
 It includes everything needed to run the demo and the tools used to generate the video format.
 
