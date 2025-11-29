@@ -1,0 +1,16 @@
+archivo/
+bin/
+recursos/
+
+ba.jpg
+ba.aud
+ba.vid
+balq.vid
+
+*.o
+*.elf
+*.map
+*.log
+
+*.raw
+

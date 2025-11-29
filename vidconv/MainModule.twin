@@ -1,0 +1,138 @@
+Module MainModule
+
+	'============================================================
+	' Bad Apple Encoder RAW -> RLE para PicoMite HDMI/USB
+	' Autor: Marcos LM (2025) 
+	'
+	'  - Lee un fichero RAW en escala de grises 8 bpp (1 byte por pixel),
+	'    con frames consecutivos de tamaño WIDTH x HEIGHT.
+	'  - Genera un fichero de salida en formato RLE linea a linea.
+	'
+	' Convenciones:
+	'  - Entrada: 0 = negro, cualquier valor != 0 = blanco.
+	'  - Cada linea empieza con un run de negro (expectedIsWhite = False).
+	'  - Los runs se codifican como bytes de longitud (0..255).
+	'  - Si un run > 255, se divide en bloques: 255,0,255,0,...,resto
+	'    (los "0" intermedios representan runs de longitud 0 del color opuesto
+	'     que el decodificador simplemente salta).
+	'
+	' Parametros de entrada / salida por defecto:
+	'  - IN_FILE  = "badapple.raw"
+	'  - OUT_FILE = "badapple.vid"
+	'
+	' Este formato RLE es el que espera la demo Bad Apple en la PicoMite.
+	'============================================================
+    
+    Private Const WIDTH        As Long = 320
+    Private Const HEIGHT       As Long = 240
+    Private Const IN_FILE      As String = "badapple.raw"   ' RAW 8bpp actual
+    Private Const OUT_FILE     As String = "badapple.vid"   ' Nuevo formato RLE
+    
+	Public Sub Main()
+        Dim fin        As Integer
+        Dim fout       As Integer
+        Dim fileSize   As Long
+        Dim bytesPerFrame As Long
+        Dim totalFrames As Long
+    
+        Dim frameIndex As Long
+        Dim y          As Long
+        Dim x          As Long
+    
+        Dim lineBuf()  As Byte
+        Dim expectedIsWhite As Boolean
+        Dim runLen     As Long
+        Dim L          As Long
+        Dim b          As Byte
+    
+        ' --- Abrir entrada ---
+        fin = FreeFile
+        Open IN_FILE For Binary Access Read As #fin
+    
+        bytesPerFrame = WIDTH * HEIGHT
+        fileSize = LOF(fin)
+    
+        If fileSize Mod bytesPerFrame <> 0 Then
+            Console.WriteLine "El tamaño del fichero no es múltiplo de WIDTH*HEIGHT. Revisa el RAW."
+            Close #fin
+            Exit Sub
+        End If
+    
+        totalFrames = fileSize \ bytesPerFrame
+        Console.WriteLine "Tamaño fichero: " & fileSize & " bytes"
+        Console.WriteLine "Bytes por frame: " & bytesPerFrame
+        Console.WriteLine "Frames detectados: " & totalFrames
+    
+        ' --- Abrir salida ---
+        fout = FreeFile
+        Open OUT_FILE For Binary Access Write As #fout
+    
+        ' Buffer para una línea (320 bytes)
+        ReDim lineBuf(0 To WIDTH - 1) As Byte
+    
+        ' --- Procesar frame a frame ---
+        For frameIndex = 0 To totalFrames - 1
+        
+            Debug.Print "Procesando frame " ; frameIndex + 1 ; " / " ; totalFrames
+        
+            For y = 0 To HEIGHT - 1
+            
+                ' Leer una línea completa del RAW (320 bytes)
+                Get #fin,, lineBuf
+            
+                x = 0
+                expectedIsWhite = False   ' Primer run = negro por convenio
+            
+                Do While x < WIDTH
+                
+                    ' Calcular longitud del run para el color esperado (negro o blanco)
+                    runLen = 0
+                    Do While x < WIDTH
+                        If ((lineBuf(x) <> 0) = expectedIsWhite) Then
+                            runLen = runLen + 1
+                            x = x + 1
+                        Else
+                            Exit Do
+                        End If
+                    Loop
+                
+                    ' Ahora tenemos un run de longitud runLen (puede ser 0)
+                    ' Hay que codificarlo en uno o varios bytes:
+                    '  - Si runLen <= 255 -> 1 byte con runLen
+                    '  - Si runLen > 255  -> secuencia: 255,0,255,0,...,resto
+                    '    (Los 0 intermedios corresponden a runs de la polaridad opuesta
+                    '     de longitud 0, que el decodificador simplemente saltará)
+                
+                    L = runLen
+                    Do While L > 255
+                        ' Primer trozo: 255 píxeles del color actual
+                        b = 255
+                        Put #fout,, b
+                        ' Segundo trozo: 0 píxeles del color contrario
+                        b = 0
+                        Put #fout,, b
+                        L = L - 255
+                    Loop
+                
+                    ' Último trozo (0..255)
+                    b = CByte(L)   ' L puede ser 0 y es válido
+                    Put #fout,, b
+                
+                    ' Cambiar el color esperado (negro <-> blanco)
+                    expectedIsWhite = Not expectedIsWhite
+                
+                Loop
+            
+            Next y
+        
+        Next frameIndex
+    
+        Close #fin
+        Close #fout
+    
+        Console.WriteLine "Conversión completada." & vbCrLf & _
+               "Frames: " & totalFrames & vbCrLf & _
+               "Salida: " & OUT_FILE
+    End Sub
+    
+End Module
