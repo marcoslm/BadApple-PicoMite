@@ -12,6 +12,14 @@ It includes everything needed to run the demo and the tools used to generate the
 
 ---
 
+## 🎥 Demo video
+
+[![Bad Apple on PicoMite HDMI/USB](https://img.youtube.com/vi/hlqbMI7XZ-w/hqdefault.jpg)](https://www.youtube.com/watch?v=hlqbMI7XZ-w)
+
+👉 https://www.youtube.com/watch?v=hlqbMI7XZ-w
+
+---
+
 ## 📦 Files
 
 ```
