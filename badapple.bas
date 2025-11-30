@@ -62,6 +62,22 @@ DIM FLOAT fpsMin = 1000
 DIM INTEGER selection   ' Menu
 
 
+
+'------------------------
+' Comprobación inicial
+'------------------------
+' Comprobar velocidad de CPU (debe ser 315000 KHz para sincronizar A/V)
+DIM FLOAT cpuhz
+cpuhz = VAL(MM.INFO$(CPUSPEED$))
+
+IF cpuhz <> 315000000 THEN
+  PRINT "Bad Apple demo expects CPUSPEED = 315000 (315 MHz)"
+  PRINT "Current: "; MM.INFO$(CPUSPEED$); " Hz"
+  PRINT
+  PRINT "Adjust with: OPTION RESOLUTION 640x480,315000"
+  END
+ENDIF
+
 DO
 	'------------------------
 	' Menu de Seleccion
@@ -137,23 +153,23 @@ DO
 	  
 	  ' Carga de 'chunk' y decodificar frame completo
 	  FOR y = 0 TO vidHeight - 1
-		' Inicializar linea para nuevo frame
-		x = 0
-		colorIsWhite = 0  ' RLE personalizado: cada linea empieza en negro
-		
-		DO WHILE x < vidWidth
-		  ' Cargar nuevo chunk si es necesario
-		  IF chunkPos >= bytesInChunk THEN LoadChunk
-		  
-		  SELECT CASE selection
-        CASE HQ_DECODE
-          ' Decodificador compilado CSUB (decode.c)
-          Decode chunk, bytesInChunk, chunkPos, x, y, colorIsWhite
-        CASE LQ_DECODE
-          ' Decodificador lento en BASIC (version LQ)
-          DecodeLQ
-		  END SELECT
-		LOOP
+      ' Inicializar linea para nuevo frame
+      x = 0
+      colorIsWhite = 0  ' RLE personalizado: cada linea empieza en negro
+      
+      DO WHILE x < vidWidth
+        ' Cargar nuevo chunk si es necesario
+        IF chunkPos >= bytesInChunk THEN LoadChunk
+        
+        SELECT CASE selection
+          CASE HQ_DECODE
+            ' Decodificador compilado CSUB (decode.c)
+            Decode chunk, bytesInChunk, chunkPos, x, y, colorIsWhite
+          CASE LQ_DECODE
+            ' Decodificador lento en BASIC (version LQ)
+            DecodeLQ
+        END SELECT
+      LOOP
 	  NEXT y
 	  
 	  ' Medir duracion del frame
