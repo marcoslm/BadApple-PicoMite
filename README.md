@@ -48,10 +48,27 @@ Then run:
 **Controls:**
 
 - Up/Down → Select mode
-
 - Enter → Start
-
 - ESC → Exit
+
+---
+
+## ⚙️ CPU speed / resolution
+
+For proper audio/video sync this demo expects the CPU clock to be **315000 KHz (315 MHz)**.
+
+On a PicoMite HDMI/USB this is the default after:
+
+```basic
+OPTION RESET HDMIUSB
+```
+If you change the video resolution, the CPU speed may also change automatically.
+Make sure your CPUSPEED is still 315000000 Hz (e.g. with `PRINT MM.INFO$(CPUSPEED)` or `OPTION LIST`) or adjust it back with:
+```basic
+OPTION RESOLUTION 640x480,315000
+```
+
+
 
 ---
 
